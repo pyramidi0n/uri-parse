@@ -22,7 +22,7 @@ If you're in a hurry, and run a *nix system, just do this:
 $ mkdir -p ~/.local/share/common-lisp/source
 
 $ git clone https://git.sr.ht/~pyramidion/uri-parse \
-  ~/.local/share/common-lisp/source/
+  ~/.local/share/common-lisp/source/uri-parse
 ```
 
 ASDF should find the package there and make it available to your Common Lisp
