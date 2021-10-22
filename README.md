@@ -7,7 +7,7 @@ developed.
 
 ## Installation
 
-You'll need to install [Trivial US-ASCII](https://git.sr.ht/~pyramidion/trivial-us-ascii) and [ABNF Match](https://git.sr.ht/~pyramidion/trivial-us-ascii) first.
+You'll need to install [Trivial US-ASCII](https://git.sr.ht/~pyramidion/trivial-us-ascii) and [ABNF Match](https://git.sr.ht/~pyramidion/abnf-match) first.
 
 URI Parse requires [ASDF](https://common-lisp.net/project/asdf/), the
 Common Lisp world's de facto standard build facility. Most Common Lisp
