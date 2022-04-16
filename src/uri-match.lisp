@@ -147,17 +147,17 @@
                    r-hexdig))
 
 (defrule r-dec-octet
-    (alternatives r-digit
-                  (concatenation (value-range-alternatives +#\1+ +#\9+)
-                                 r-digit)
-                  (concatenation (terminal +#\1+)
-                                 (specific-repetition 2 r-digit))
+    (alternatives (concatenation (terminal +#\2+)
+                                 (terminal +#\5+)
+                                 (value-range-alternatives +#\0+ +#\5+))
                   (concatenation (terminal +#\2+)
                                  (value-range-alternatives +#\0+ +#\4+)
                                  r-digit)
-                  (concatenation (terminal +#\2+)
-                                 (terminal +#\5+)
-                                 (value-range-alternatives +#\0+ +#\5+))))
+                  (concatenation (terminal +#\1+)
+                                 (specific-repetition 2 r-digit))
+                  (concatenation (value-range-alternatives +#\1+ +#\9+)
+                                 r-digit)
+                  r-digit))
 
 (defrule r-h16
     (variable-repetition r-hexdig :minimum 1 :maximum 4))
@@ -205,8 +205,7 @@
                    (terminal +#\.+)
                    r-dec-octet
                    (terminal +#\.+)
-                   r-dec-octet
-                   (terminal +#\.+)))
+                   r-dec-octet))
 
 (defrule r-ipvfuture
     (concatenation (terminal +#\v+)
@@ -283,72 +282,141 @@
                   r-path-empty))
 
 (defrule r-ipv6-address
-    (alternatives (concatenation (specific-repetition 6
-                                                      (concatenation r-h16
-                                                                     (terminal +#\:+)))
-                                 r-ls32)
-                  (concatenation (terminal +#\:+)
-                                 (terminal +#\:+)
-                                 (specific-repetition 5
-                                                      (concatenation r-h16
-                                                                     (terminal +#\:+)))
-                                 r-ls32)
-                  (concatenation (optional-sequence r-h16)
-                                 (terminal +#\:+)
-                                 (terminal +#\:+)
-                                 (specific-repetition 4
-                                                      (concatenation r-h16
-                                                                     (terminal +#\:+)))
-                                 r-ls32)
-                  (concatenation (optional-sequence (variable-repetition (concatenation r-h16
-                                                                                        (terminal +#\:+))
-                                                                         :maximum 1)
-                                                    r-h16)
-                                 (terminal +#\:+)
-                                 (terminal +#\:+)
-                                 (specific-repetition 3
-                                                      (concatenation r-h16
-                                                                     (terminal +#\:+)))
-                                 r-ls32)
-                  (concatenation (optional-sequence (variable-repetition (concatenation r-h16
-                                                                                        (terminal +#\:+))
-                                                                         :maximum 2)
-                                                    r-h16)
-                                 (terminal +#\:+)
-                                 (terminal +#\:+)
-                                 (specific-repetition 2
-                                                      (concatenation r-h16
-                                                                     (terminal +#\:+)))
-                                 r-ls32)
-                  (concatenation (optional-sequence (variable-repetition (concatenation r-h16
-                                                                                        (terminal +#\:+))
-                                                                         :maximum 3)
-                                                    r-h16)
-                                 (terminal +#\:+)
-                                 (terminal +#\:+)
-                                 r-h16
-                                 (terminal +#\:+)
-                                 r-ls32)
-                  (concatenation (optional-sequence (variable-repetition (concatenation r-h16
-                                                                                        (terminal +#\:+))
-                                                                         :maximum 4)
-                                                    r-h16)
-                                 (terminal +#\:+)
-                                 (terminal +#\:+)
-                                 r-ls32)
-                  (concatenation (optional-sequence (variable-repetition (concatenation r-h16
-                                                                                        (terminal +#\:+))
-                                                                         :maximum 5)
-                                                    r-h16)
-                                 (terminal +#\:+)
-                                 (terminal +#\:+)
-                                 r-h16)
-                  (concatenation (optional-sequence (variable-repetition (concatenation r-h16
-                                                                                        (terminal +#\:+))
-                                                                         :maximum 6)
-                                                    r-h16)
-                                 (terminal +#\:+)
-                                 (terminal +#\:+))))
+    (alternatives
+     ;; Here we explicitly enumerate all possible matches, because relying
+     ;; on variable-repetition introduces bugs when matching against
+     ;; addresses that include ::
+     (concatenation (specific-repetition 6
+                                         (concatenation r-h16
+                                                        (terminal +#\:+)))
+                    r-ls32)
+     (concatenation (terminal +#\:+)
+                    (terminal +#\:+)
+                    (specific-repetition 5
+                                         (concatenation r-h16
+                                                        (terminal +#\:+)))
+                    r-ls32)
+     (concatenation (optional-sequence r-h16)
+                    (terminal +#\:+)
+                    (terminal +#\:+)
+                    (specific-repetition 4
+                                         (concatenation r-h16
+                                                        (terminal +#\:+)))
+                    r-ls32)
+     (concatenation (optional-sequence (alternatives
+                                        (concatenation r-h16 (terminal +#\:+)
+                                                       r-h16)
+                                        r-h16))
+                    (terminal +#\:+)
+                    (terminal +#\:+)
+                    (specific-repetition 3
+                                         (concatenation r-h16
+                                                        (terminal +#\:+)))
+                    r-ls32)
+     (concatenation (optional-sequence (alternatives
+                                        (concatenation r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16)
+                                        (concatenation r-h16 (terminal +#\:+)
+                                                       r-h16)
+                                        r-h16))
+                    (terminal +#\:+)
+                    (terminal +#\:+)
+                    (specific-repetition 2
+                                         (concatenation r-h16
+                                                        (terminal +#\:+)))
+                    r-ls32)
+     (concatenation (optional-sequence (alternatives
+                                        (concatenation r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16)
+                                        (concatenation r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16)
+                                        (concatenation r-h16 (terminal +#\:+)
+                                                       r-h16)
+                                        r-h16))
+                    (terminal +#\:+)
+                    (terminal +#\:+)
+                    r-h16
+                    (terminal +#\:+)
+                    r-ls32)
+     (concatenation (optional-sequence (alternatives
+                                        (concatenation r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16)
+                                        (concatenation r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16)
+                                        (concatenation r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16)
+                                        (concatenation r-h16 (terminal +#\:+)
+                                                       r-h16)
+                                        r-h16))
+                    (terminal +#\:+)
+                    (terminal +#\:+)
+                    r-ls32)
+     (concatenation (optional-sequence (alternatives
+                                        (concatenation r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16)
+                                        (concatenation r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16)
+                                        (concatenation r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16)
+                                        (concatenation r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16)
+                                        (concatenation r-h16 (terminal +#\:+)
+                                                       r-h16)
+                                        r-h16))
+                    (terminal +#\:+)
+                    (terminal +#\:+)
+                    r-h16)
+     (concatenation (optional-sequence (alternatives
+                                        (concatenation r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16)
+                                        (concatenation r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16)
+                                        (concatenation r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16)
+                                        (concatenation r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16)
+                                        (concatenation r-h16 (terminal +#\:+)
+                                                       r-h16 (terminal +#\:+)
+                                                       r-h16)
+                                        (concatenation r-h16 (terminal +#\:+)
+                                                       r-h16)
+                                        r-h16))
+                    (terminal +#\:+)
+                    (terminal +#\:+))))
 
 ;; ---
 
@@ -360,7 +428,16 @@
 ;; ---
 
 (defrule r-host
-    (alternatives r-ip-literal r-ipv4-address r-reg-name))
+    (alternatives r-ip-literal
+                  ;; Note that a reg-name is a strict superset of an
+                  ;; ipv4-address, even as defined in the RFC. Therefore there's
+                  ;; no point in attempting to match an ipv4-address, and if we
+                  ;; attempt to match one before the reg-name, the parser will
+                  ;; fail in cases where an ipv4 address precedes the rest of
+                  ;; a longer host, e,g. 10.10.10.10.example.com
+                  ;;
+                  ;; r-ipv4-address
+                  r-reg-name))
 
 ;; ---
 
