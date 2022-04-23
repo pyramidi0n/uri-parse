@@ -71,6 +71,6 @@ Patches are welcome.
 
 ## License
 
-URI Parse is licensed under the GNU Affero General Public License v3.
+URI Parse is licensed under the two-clause BSD license.
 
-See LICENSE and AGPLv3.
+See LICENSE.
