@@ -1,64 +1,127 @@
 # URI Parse
 
-A library for fast, rigorous URI syntax validation and parsing.
+A fast, RFC-compliant URI validator and parser.
 
-Note that this is alpha quality software, and its interface is still being
-developed.
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Installation](#installation)
+3. [Usage](#usage)
+4. [Performance](#performance)
+5. [Links](#links)
+6. [Patches](#patches)
+7. [License](#license)
+
+## Overview
+
+This library complies with [RFC 3986](https://www.ietf.org/rfc/rfc3986.txt) and
+includes a comprehensive test suite. It provides validation and parsing that's
+much more robust than most regex-based solutions.
+
+And it's fast.
 
 ## Installation
 
-You'll need to install [Trivial US-ASCII](https://git.sr.ht/~pyramidion/trivial-us-ascii) and [ABNF Match](https://git.sr.ht/~pyramidion/abnf-match) first.
+URI Parse is available on [Ultralisp](https://ultralisp.org/) and is easy to
+install using [Quicklisp](https://www.quicklisp.org/beta/).
 
-URI Parse requires [ASDF](https://common-lisp.net/project/asdf/), the
-Common Lisp world's de facto standard build facility. Most Common Lisp
-implementations ship with ASDF, so chances are you don't need to install it
-yourself.
+Add the Ultralisp repository:
 
-You'll need to [configure ASDF to find URI Parse](https://common-lisp.net/project/asdf/asdf/Configuring-ASDF-to-find-your-systems.html).
-
-If you're in a hurry, and run a *nix system, just do this:
-
-```bash
-$ mkdir -p ~/.local/share/common-lisp/source
-
-$ git clone https://git.sr.ht/~pyramidion/uri-parse \
-  ~/.local/share/common-lisp/source/uri-parse
+```lisp
+CL-USER> (ql-dist:install-dist "http://dist.ultralisp.org/")
 ```
 
-ASDF should find the package there and make it available to your Common Lisp
-implementation. Subsequently, you will be able to `require` the package in
-your REPL, and include it as a dependency to your own projects using ASDF.
+Install URI Parse:
 
-At some point, I'll see about including it in [Quicklisp](https://www.quicklisp.org/beta/).
+```lisp
+CL-USER> (ql:quickload :uri-parse)
+```
 
 ## Usage
 
-Right now there's just a single low-level function: `parse`, which takes a
-`(simple-array (unsigned-byte 8) (*))` containing a URI. It returns seven
-components: `scheme`, `userinfo`, `host`, `port`, `path`, `query`, and
-`fragment`.
+You can parse URI strings:
 
 ```lisp
 CL-USER> (require :uri-parse)
 NIL
 
-CL-USER> (defparameter *uri* "http://www.ics.uci.edu/pub/ietf/uri/#Related")
-*URI*
-
-CL-USER> (defparameter *uri-octets*
-                       (trivial-us-ascii:ascii-string-code
-                         '(simple-array (unsigned-byte 8) (*))
-                         *uri*))
-*URI-OCTETS*
-
-CL-USER> (uri-parse:parse *uri-octets* 0 (length *uri-octets*))
+CL-USER> (uri-parse:parse "http://www.ics.uci.edu/pub/ietf/uri/#Related")
 "http"
 NIL
 "www.ics.uci.edu"
 NIL
 "/pub/ietf/uri/"
 NIL
-"#Related"
+"Related"
+
+CL-USER> (uri-parse:parse "http://www.ics.uci.edu/pub/ietf/uri/#Related"
+                          :plist t)
+(:SCHEME "http" :USERINFO NIL :HOST "www.ics.uci.edu" :PORT NIL :PATH
+ "/pub/ietf/uri/" :QUERY NIL :FRAGMENT "Related")
+```
+
+Or octet sequences:
+
+```lisp
+CL-USER> (require :uri-parse)
+NIL
+
+CL-USER> (uri-parse:parse-octets
+          (trivial-us-ascii:ascii-string-code
+           '(simple-array (unsigned-byte 8) (*))
+           "http://www.ics.uci.edu/pub/ietf/uri/#Related")
+          0
+          (length "http://www.ics.uci.edu/pub/ietf/uri/#Related"))
+"http"
+NIL
+"www.ics.uci.edu"
+NIL
+"/pub/ietf/uri/"
+NIL
+"Related"
+
+CL-USER> (uri-parse:parse-octets
+          (trivial-us-ascii:ascii-string-code
+           '(simple-array (unsigned-byte 8) (*))
+           "http://www.ics.uci.edu/pub/ietf/uri/#Related")
+          0
+          (length "http://www.ics.uci.edu/pub/ietf/uri/#Related")
+          :plist t)
+(:SCHEME "http" :USERINFO NIL :HOST "www.ics.uci.edu" :PORT NIL :PATH
+ "/pub/ietf/uri/" :QUERY NIL :FRAGMENT "Related")
+```
+
+## Performance
+
+Parsing is fairly quick, and runs in linear time, though the parser does cons:
+
+```lisp
+CL-USER> (time (dotimes (c 100000)
+                 (uri-parse:parse "http://www.ics.uci.edu/pub/ietf/uri/#Related")))
+Evaluation took:
+  0.336 seconds of real time
+  0.338207 seconds of total run time (0.338165 user, 0.000042 system)
+  100.60% CPU
+  1,149,893,872 processor cycles
+  246,412,608 bytes consed
+
+NIL
+
+CL-USER> (time (dotimes (c 100000)
+                 (uri-parse:parse-octets
+                  (trivial-us-ascii:ascii-string-code
+                   '(simple-array (unsigned-byte 8) (*))
+                   "http://www.ics.uci.edu/pub/ietf/uri/#Related")
+                  0
+                  (length "http://www.ics.uci.edu/pub/ietf/uri/#Related"))))
+Evaluation took:
+  0.344 seconds of real time
+  0.342664 seconds of total run time (0.334695 user, 0.007969 system)
+  99.71% CPU
+  1,165,090,342 processor cycles
+  246,412,592 bytes consed
+
+NIL
 ```
 
 ## Links
