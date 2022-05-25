@@ -218,10 +218,14 @@
   (declare (optimize (speed 3) (debug 0) (safety 0)))
   (declare (type string str))
   (declare (type boolean plist))
-  (let ((octets (ascii-string-code '(simple-array (unsigned-byte 8) (*)) str)))
-    (declare (type (simple-array (unsigned-byte 8) (*)) octets))
-    (multiple-value-bind (scheme userinfo host port path query fragment)
-        (parse-octets octets 0 (length octets))
-      (if plist
-          (plist scheme userinfo host port path query fragment)
-          (values scheme userinfo host port path query fragment)))))
+  (let ((octets
+          (handler-case
+              (ascii-string-code '(simple-array (unsigned-byte 8) (*)) str)
+            (type-error ()))))
+    (declare (type (or null (simple-array (unsigned-byte 8) (*))) octets))
+    (when octets
+      (multiple-value-bind (scheme userinfo host port path query fragment)
+          (parse-octets octets 0 (length octets))
+        (if plist
+            (plist scheme userinfo host port path query fragment)
+            (values scheme userinfo host port path query fragment))))))
