@@ -63,9 +63,6 @@
 (declaim (inline r-parse-authority))
 (declaim (inline r-parse-hier-part))
 (declaim (inline r-parse-uri))
-;; (declaim (inline r-parse-relative-part))
-;; (declaim (inline r-parse-relative-ref))
-;; (declaim (inline r-parse-uri-reference))
 (declaim (inline plist))
 
 (defrule r-parse-authority
@@ -119,38 +116,6 @@
                                       (capture *fragment-lower*
                                                *fragment-upper*
                                                r-fragment))))
-
-;; (defrule r-parse-relative-part
-;;     (alternatives (concatenation (terminal +#\/+)
-;;                                  (terminal +#\/+)
-;;                                  r-parse-authority
-;;                                  (capture *path-lower*
-;;                                           *path-upper*
-;;                                           r-path-abempty))
-;;                   (capture *path-lower*
-;;                            *path-upper*
-;;                            r-path-absolute)
-;;                   (capture *path-lower*
-;;                            *path-upper*
-;;                            r-path-noscheme)
-;;                   (capture *path-lower*
-;;                            *path-upper*
-;;                            r-path-empty)))
-
-;; (defrule r-parse-relative-ref
-;;     (concatenation r-parse-relative-part
-;;                    (optional-sequence (terminal +#\?+)
-;;                                       (capture *query-lower*
-;;                                                *query-upper*
-;;                                                r-query))
-;;                    (optional-sequence (terminal +#\#+)
-;;                                       (capture *fragment-lower*
-;;                                                *fragment-upper*
-;;                                                r-fragment))))
-
-;; (defrule r-parse-uri-reference
-;;     (alternatives r-parse-uri
-;;                   r-parse-relative-ref))
 
 (defun plist (scheme userinfo host port path query fragment)
   (declare (optimize (speed 3) (debug 0) (safety 0)))
